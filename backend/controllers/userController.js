@@ -217,3 +217,49 @@ export const userLogout = async (req, res) => {
   }
 };
 
+// Route for Refresh Access Token
+export const refreshAccessToken = async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+      return res.status(401).json({
+        success: false,
+        message: "No refresh token provided",
+      });
+    }
+
+    const decoded = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const accessToken = generateAccessToken(user._id);
+
+    res
+      .cookie("accessToken", accessToken, {
+        httpOnly: true,
+        maxAge: 15 * 60 * 1000,
+      })
+      .status(200)
+      .json({
+        success: true,
+        message: "Access token refreshed successfully",
+      });
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: error.message || "Invalid refresh token",
+    });
+  }
+};
+
+

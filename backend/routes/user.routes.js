@@ -5,6 +5,7 @@ import {
   userLogin,
   userRegister,
   userLogout,
+  refreshAccessToken,
 } from "../controllers/userController.js";
 
 import { userAuthorizes } from "../middleware/userAuth.js";
@@ -20,6 +21,9 @@ userRoute.post("/login", userLogin);
 
 // Logout
 userRoute.post("/logout", userLogout);
+
+// Refresh Token
+userRoute.post("/refresh", refreshAccessToken);
 
 // Get current user (protected)
 userRoute.get("/me", userAuthorizes, getMe);

@@ -22,52 +22,59 @@ import { ToastContainer } from "react-toastify";
 
 const App = () => {
   return (
-    <div className="px-10 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
-      <ToastContainer position="top-right" />
+    <div className="relative min-h-screen bg-[#FAFAFA] text-gray-900 overflow-x-hidden">
+      {/* Background blobs for premium glassmorphism overlay */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-indigo-200/40 to-purple-200/40 blur-[120px] pointer-events-none animate-pulse-glow" style={{ animationDuration: '8s' }}></div>
+      <div className="absolute top-[30%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-gradient-to-br from-cyan-200/30 to-blue-200/30 blur-[100px] pointer-events-none animate-pulse-glow" style={{ animationDuration: '12s' }}></div>
+      <div className="absolute bottom-[-10%] left-[20%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tr from-purple-200/30 via-indigo-100/20 to-cyan-200/30 blur-[140px] pointer-events-none animate-pulse-glow" style={{ animationDuration: '15s' }}></div>
 
-      <Navbar />
-      <Search />
+      <div className="relative z-10 px-6 sm:px-[5vw] md:px-[7vw] lg:px-[9vw] max-w-[1600px] mx-auto">
+        <ToastContainer position="top-right" />
 
-      <Routes>
-        {/* PUBLIC ROUTES */}
-        <Route path="/" element={<Home />} />
-        <Route path="/collection" element={<Collection />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/product/:productId" element={<Product />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/verify" element={<Verify />} />
+        <Navbar />
+        <Search />
 
-        {/* PROTECTED ROUTES */}
-        <Route
-          path="/cart"
-          element={
-            <ProtectedRoute>
-              <Cart />
-            </ProtectedRoute>
-          }
-        />
+        <Routes>
+          {/* PUBLIC ROUTES */}
+          <Route path="/" element={<Home />} />
+          <Route path="/collection" element={<Collection />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/product/:productId" element={<Product />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/verify" element={<Verify />} />
 
-        <Route
-          path="/place-order"
-          element={
-            <ProtectedRoute>
-              <PlaceOrder />
-            </ProtectedRoute>
-          }
-        />
+          {/* PROTECTED ROUTES */}
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute>
+                <Cart />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/orders"
-          element={
-            <ProtectedRoute>
-              <Orders />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
+          <Route
+            path="/place-order"
+            element={
+              <ProtectedRoute>
+                <PlaceOrder />
+              </ProtectedRoute>
+            }
+          />
 
-      <Footer />
+          <Route
+            path="/orders"
+            element={
+              <ProtectedRoute>
+                <Orders />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+
+        <Footer />
+      </div>
     </div>
   );
 };
