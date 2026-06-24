@@ -6,30 +6,33 @@ import { toast } from "react-toastify";
 
 
 const Orders = () => {
-  const { token, currency,backendUrl } = useContext(shopContext);
+  const { isAuthenticated, currency, backendUrl } = useContext(shopContext);
   
   const [orderData, setOrderData] = useState([]);
 
   const orderFeatch = async () => {
-   try {
-     
-    if(!token){
-      return null;
+    try {
+      if (!isAuthenticated) {
+        return null;
+      }
+      const response = await axios.post(
+        `${backendUrl}/api/order/userorders`,
+        {},
+        { withCredentials: true }
+      );
+
+      setOrderData(response.data.orders);
+    } catch (error) {
+      toast.error(error.message);
     }
-    const response = await axios.post(`${backendUrl}/api/order/userorders`,{},{headers:{ token:token}})
+  };
 
-    setOrderData(response.data.orders)
-   } catch (error) {
-
-    toast.error(error.message)
-   }
-    
-  }
   useEffect(() => {
-    orderFeatch()
-  
-   
-  }, [token])
+    if (isAuthenticated) {
+      orderFeatch();
+    }
+  }, [isAuthenticated]);
+
   
   return (
     <div className="border-t pt-16">

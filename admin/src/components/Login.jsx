@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-function Login({setToken}) {
+function Login({ onLoginSuccess }) {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
   console.log(import.meta.env.VITE_BACKEND_URL)
   const [email, setemail] = useState("admin@gmail.com")
@@ -10,18 +10,22 @@ function Login({setToken}) {
 
     try {
       e.preventDefault()
-      const response = await axios.post(`${backendUrl}/api/user/admin`,{email,password})
+      const response = await axios.post(
+        `${backendUrl}/api/user/admin/login`,
+        { email, password },
+        { withCredentials: true }
+      )
       if(response.data.success){
-        setToken(response.data.token)
         toast.success(response.data.message)
-
+        onLoginSuccess()
       }else{
         toast.error(response.data.message)
       }
     } catch (error) {
-      toast.error(error.message)
+      toast.error(error.response?.data?.message || error.message)
     }
   }
+
   return (
     <div className='min-h-screen flex items-center justify-center w-full'>
       <div className='bg-white shadow-md rounded-lg px-8 py-6 max-w-md'>

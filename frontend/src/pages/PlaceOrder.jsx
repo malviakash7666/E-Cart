@@ -10,7 +10,6 @@ const PlaceOrder = () => {
   const [method, setMethod] = useState("cod");
   const {
     navigate,
-    token,
     cartItems,
     setcartItems,
     getCartAmount,
@@ -47,7 +46,7 @@ const PlaceOrder = () => {
       receipt:order.receipt,
       handler:async (response) =>{
  try {
-           const {data} = await axios.post(`${backendUrl}/api/order/verifyRazorpay`,response,{headers:{token}});
+           const {data} = await axios.post(`${backendUrl}/api/order/verifyRazorpay`,response,{withCredentials: true});
            if(data.success ){
             navigate("/orders");
             setcartItems({})
@@ -87,7 +86,7 @@ const PlaceOrder = () => {
  }
  switch (method) {
    case "cod": 
-  { const response = await axios.post(`${backendUrl}/api/order/place`,orderData,{headers:{token}})
+  { const response = await axios.post(`${backendUrl}/api/order/place`,orderData,{withCredentials: true})
 
 
   if(response.data.success){
@@ -100,7 +99,7 @@ const PlaceOrder = () => {
     break;
 
     case "stripe":
-    {  const stripeResponse = await axios.post(`${backendUrl}/api/order/stripe`,orderData,{headers:{token}})
+    {  const stripeResponse = await axios.post(`${backendUrl}/api/order/stripe`,orderData,{withCredentials: true})
        
   if(stripeResponse.data.success){
  const { session_url} = stripeResponse.data
@@ -111,7 +110,7 @@ const PlaceOrder = () => {
   break;
 
   case "razorpay" : {
-  const response = await  axios.post(`${backendUrl}/api/order/razorpay`,orderData,{headers:{token}})
+  const response = await  axios.post(`${backendUrl}/api/order/razorpay`,orderData,{withCredentials: true})
   if(response.data.success){
     initPay(response.data.order )
   }

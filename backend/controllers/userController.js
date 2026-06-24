@@ -2,52 +2,96 @@ import { User } from "../models/userModel.js";
 import validator from "validator";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { generateAccessToken, generateRefreshToken } from "../utils/generateTokens.js";
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SCREATE);
-};
+
 // Route for user login
 export const userLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
+
     if (!email || !password) {
       return res.status(400).json({
         success: false,
         message: "Please provide all details",
       });
     }
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User Not Found!" });
-    }
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Invalid email or password!" });
-    }
-    const token = generateToken(user._id);
-    res.status(200).json({
-      success: true,
-      message: `${user.name} Login Successfull`,
-      token,
-    });
-  } catch (error) {
 
-   return res.status(400).json({
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    res
+      .cookie("accessToken", accessToken, {
+        httpOnly: true,
+        maxAge: 15 * 60 * 1000,
+      })
+      .cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      })
+      .status(200)
+      .json({
+        success: true,
+        message: `${user.name} login successful`,
+        user,
+      });
+
+  } catch (error) {
+    return res.status(500).json({
       success: false,
-      message: `Internal Server Error ` || error,
+      message: error.message || "Internal Server Error",
     });
   }
 };
 
+// Route for Get Current User
+
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
 // Route for user Register
 
 export const userRegister = async (req, res) => {
   try {
     const { email, name, password } = req.body;
+
     if (!email || !name || !password) {
       return res.status(400).json({
         success: false,
@@ -59,20 +103,21 @@ export const userRegister = async (req, res) => {
     if (exist) {
       return res.status(400).json({
         success: false,
-        message: "User is Already exist",
+        message: "User already exists",
       });
     }
+
     if (!validator.isEmail(email)) {
       return res.status(400).json({
         success: false,
-        message: "Please provide a valid email",
+        message: "Invalid email",
       });
     }
+
     if (password.length < 8) {
       return res.status(400).json({
         success: false,
-        message:
-          "Please provid a strong password that contain atleast 8 character",
+        message: "Password must be at least 8 characters",
       });
     }
 
@@ -83,18 +128,30 @@ export const userRegister = async (req, res) => {
       email,
       password: hashPassword,
     });
-    const token = generateToken(user._id);
 
-    res.status(201).json({
-      user,
-      success: true,
-      token,
-      message: "User Register Successfully",
-    });
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    res
+      .cookie("accessToken", accessToken, {
+        httpOnly: true,
+        maxAge: 15 * 60 * 1000,
+      })
+      .cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      })
+      .status(201)
+      .json({
+        success: true,
+        message: "User registered successfully",
+        user,
+      });
+
   } catch (error) {
-  return  res.status(400).json({
+    return res.status(500).json({
       success: false,
-      message: `Registration Error`,
+      message: error.message || "Registration Error",
     });
   }
 };
@@ -104,35 +161,59 @@ export const userRegister = async (req, res) => {
 export const adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({
+
+    if (
+      email !== process.env.ADMIN_EMAIL ||
+      password !== process.env.ADMIN_PASSWORD
+    ) {
+      return res.status(401).json({
         success: false,
-        message: "Please provide all detail",
+        message: "Invalid credentials",
       });
     }
 
-    if (
-      email === process.env.ADMIN_EMAIL &&
-      password === process.env.ADMIN_PASSWORD
-    ) {
+    const token = jwt.sign(
+      { role: "admin", email },
+      process.env.JWT_ACCESS_SECRET,
+      { expiresIn: "15m" }
+    );
 
-        const token = jwt.sign(email + password, process.env.JWT_SCREATE);
-        res.status(200).json({
-            success:true,
-            message:"Admin Login",
-            token
-        })
-    } else{
-        res.status(400).json({
-            success:false,
-            message:"Invalid Credentials"
-        })
-    }
+    res.cookie("adminToken", token, {
+      httpOnly: true,
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Admin login successful",
+    });
 
   } catch (error) {
-    res.status(400).json({
-        success:false,
-        message:error.message
-    })
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
+
+// Route for User Logout
+export const userLogout = async (req, res) => {
+  try {
+    res
+      .clearCookie("accessToken", { httpOnly: true })
+      .clearCookie("refreshToken", { httpOnly: true })
+      .clearCookie("adminToken", { httpOnly: true })
+      .status(200)
+      .json({
+        success: true,
+        message: "Logged out successfully",
+      });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
+

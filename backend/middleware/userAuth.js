@@ -1,16 +1,30 @@
+
 import jwt from "jsonwebtoken";
+
 export const userAuthorizes = async (req, res, next) => {
-  const token = req.header("token");
-
   try {
-    const token_decoded = jwt.verify(token, process.env.JWT_SCREATE);
+    const accessToken = req.cookies.accessToken;
 
-    req.userId = token_decoded.id;
+    if (!accessToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const decoded = jwt.verify(
+      accessToken,
+      process.env.JWT_ACCESS_SECRET
+    );
+
+    req.userId = decoded.id;
+
     next();
   } catch (error) {
-    return res.status(400).json({
+    return res.status(401).json({
       success: false,
-      message: `error: ${error.message}`,
+      message: error.message,
     });
   }
 };
+

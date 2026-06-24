@@ -9,31 +9,33 @@ function Orders({ token }) {
   const [orders, setOrders] = useState([]);
 
   const featchOrders = async () => {
-    if (!token) {
-      return null;
-    }
     try {
-      const response = await axios.post(`${backendUrl}/api/order/list`,
+      const response = await axios.post(
+        `${backendUrl}/api/order/list`,
         {},
-        { headers: { token } }
+        { withCredentials: true }
       );
       if (response.data.success) {
         setOrders(response.data.orders.reverse());
-      
       } else {
         toast.error(response.data.message);
       }
     } catch (error) {
-  toast.error(error.message)
+      toast.error(error.message)
     }
   };
+
   useEffect(() => {
     featchOrders();
-  }, [token]);
+  }, []);
 
   const statusUpdate = async (event,orderId) => {
     try {
-      const response = await axios.post(backendUrl+"/api/order/status",{orderId,status:event.target.value} ,{headers:{token}})
+      const response = await axios.post(
+        `${backendUrl}/api/order/status`,
+        { orderId, status: event.target.value },
+        { withCredentials: true }
+      );
 
       if(response.data.success){
        await featchOrders()

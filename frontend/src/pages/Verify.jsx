@@ -4,7 +4,7 @@ import {  useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 const Verify = () => {
-  const {token,navigate,setcartItems,backendUrl} = useContext(shopContext);
+  const { isAuthenticated, isAuthLoading, navigate, setcartItems, backendUrl } = useContext(shopContext);
   const [searchParams] = useSearchParams();
 
   const success = searchParams.get('success');
@@ -12,11 +12,11 @@ const Verify = () => {
   const verifyPayment = async() =>{
 
     try {
-      if(!token){
-        return null;
-      }
-
-      const response = await axios.post(`${backendUrl}/api/order/verifyStrip`,{success,orderid},{headers:{token : token}});
+      const response = await axios.post(
+        `${backendUrl}/api/order/verifyStrip`,
+        { success, orderid },
+        { withCredentials: true }
+      );
  
       if(response.data.success){
         setcartItems({});
@@ -30,8 +30,14 @@ const Verify = () => {
   }
 
   useEffect(() => {
-   verifyPayment()
-  }, [token])
+    if (!isAuthLoading) {
+      if (isAuthenticated) {
+        verifyPayment();
+      } else {
+        navigate("/login");
+      }
+    }
+  }, [isAuthenticated, isAuthLoading]);
   
   
  

@@ -8,8 +8,8 @@ function List({ token }) {
   const fetchList = async () => {
     try {
       const response = await axios.get(
-      backendUrl+"/api/product/list",
-        { headers: { token } }
+        `${backendUrl}/api/product/list`,
+        { withCredentials: true }
       );
 
       console.log(response.data);
@@ -29,7 +29,11 @@ function List({ token }) {
   }, []);
  const removeProduct = async (id) => {
   try {
-    const response = await axios.post(`${backendUrl}/api/product/remove `,{id},{headers:{token}})
+    const response = await axios.post(
+      `${backendUrl}/api/product/remove`,
+      { id },
+      { withCredentials: true }
+    )
     if(response.data.success){
       toast.success(response.data.message)
       await fetchList()

@@ -5,49 +5,74 @@ import { toast } from "react-toastify";
 
 const Login = () => {
   const [currentState, setCurrentState] = useState("Login");
-  const { token, setToken, navigate, backendUrl } = useContext(shopContext);
+
+  const { navigate, backendUrl } = useContext(shopContext);
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  // =========================
+  // SUBMIT HANDLER
+  // =========================
   const onSubmitHandler = async (e) => {
     e.preventDefault();
+
     try {
       if (currentState === "Sign Up") {
         const response = await axios.post(
           `${backendUrl}/api/user/register`,
-          { name, email, password }
+          { name, email, password },
+          { withCredentials: true }
         );
+
         if (response.data.success) {
-          setToken(response.data.token);
-          localStorage.setItem("token", response.data.token);
           toast.success(response.data.message);
+          navigate("/");
         } else {
           toast.error(response.data.message);
         }
       } else {
         const response = await axios.post(
           `${backendUrl}/api/user/login`,
-          { email, password }
+          { email, password },
+          { withCredentials: true }
         );
+
         if (response.data.success) {
-          setToken(response.data);
-          localStorage.setItem("token", response.data.token);
           toast.success(response.data.message);
+          navigate("/");
         } else {
           toast.error(response.data.message);
         }
       }
     } catch (error) {
-  
-      toast.error(error.response.data.message || "Login functionality error");
+      toast.error(error.response?.data?.message || "Login error");
     }
   };
 
+  // =========================
+  // AUTO REDIRECT IF LOGGED IN
+  // =========================
   useEffect(() => {
-    if (token) {
-      navigate("/");
-    }
-  }, [token,navigate]);
+    const checkLogin = async () => {
+      try {
+        const res = await axios.get(
+          `${backendUrl}/api/user/me`,
+          { withCredentials: true }
+        );
+
+        if (res.data.success) {
+          navigate("/");
+        }
+      } catch (err) {
+        // not logged in
+      }
+    };
+
+    checkLogin();
+  }, []);
+
   return (
     <form
       onSubmit={onSubmitHandler}
@@ -57,9 +82,8 @@ const Login = () => {
         <p className="prata-reguler text-3xl">{currentState}</p>
         <hr className="border-none h-[1.5px] w-8 bg-gray-800" />
       </div>
-      {currentState === "Login" ? (
-        ""
-      ) : (
+
+      {currentState === "Sign Up" && (
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -69,6 +93,7 @@ const Login = () => {
           required
         />
       )}
+
       <input
         value={email}
         onChange={(e) => setEmail(e.target.value)}
@@ -77,6 +102,7 @@ const Login = () => {
         placeholder="Email"
         required
       />
+
       <input
         value={password}
         onChange={(e) => setPassword(e.target.value)}
@@ -85,8 +111,10 @@ const Login = () => {
         placeholder="Password"
         required
       />
+
       <div className="w-full flex justify-between text-sm mt-[-8px]">
         <p className="cursor-pointer">Forgot Password?</p>
+
         {currentState === "Login" ? (
           <p
             onClick={() => setCurrentState("Sign Up")}
@@ -103,10 +131,8 @@ const Login = () => {
           </p>
         )}
       </div>
-      <button
-        className="bg-black text-white font-light px-8 py-2 mt-4
-"
-      >
+
+      <button className="bg-black text-white font-light px-8 py-2 mt-4">
         {currentState === "Login" ? "Sign In" : "Sign Up"}
       </button>
     </form>
